@@ -1,8 +1,8 @@
 import requests
 import urllib.parse
 
+from dateutil import tz
 from datetime import datetime, timezone
-from pytz import timezone
 from flask import Flask, render_template, request
 
 # Configure application
@@ -17,10 +17,10 @@ def after_request(response):
     return response
 
 # Global datetime
-tz = timezone('Asia/Singapore')
-now = datetime.now(tz=tz).isoformat(timespec='seconds')
-today = datetime.now(tz=tz).strftime('%Y-%m-%d')
-nicenow = datetime.now(tz=tz).strftime('%-I:%M%p, %-d %b %Y')
+sgtz = tz.gettz('Asia/Singapore')
+now = datetime.now(tz=sgtz).isoformat(timespec='seconds')
+today = datetime.now(tz=sgtz).strftime('%Y-%m-%d')
+nicenow = datetime.now(tz=sgtz).strftime('%-I:%M%p, %-d %b %Y')
 
 avgtemp = 0
 avghumid = 0
@@ -36,8 +36,12 @@ def rtwget(url_t, url_h):
 
     except requests.RequestException:
         return {
-            "station_id": "Invalid station ID",
-            "value": "Unavailable"
+            "id": "No station ID available",
+            "name": "",
+            "tempvalue": "NA",
+            "humidity": "NA",
+            "h_index": "NA",
+            "index": "1",
         }
 
     # Get humidity data
@@ -47,26 +51,31 @@ def rtwget(url_t, url_h):
 
     except requests.RequestException:
         return {
-            "station_id": "Invalid station ID",
-            "value": "Unavailable"
+            "id": "No station ID available",
+            "name": "",
+            "tempvalue": "NA",
+            "humidity": "NA",
+            "h_index": "NA",
+            "index": "1",
         }
 
     # Send data to parse function
-    data = rtwparse(tempResponse, humidityResponse)
+    data = rtwparse(tempResponse.json(), humidityResponse.json())
 
     return data
 
 
-def rtwparse(tempResponse, humidityResponse):
+def rtwparse(tempData, humidityData):
 
+    # Lists to calculate averages
     temp = []
     humid = []
+    
+    # List of dicts to store station data
     rtw_data = []
 
     # Parse data
     try:
-        tempData = tempResponse.json()
-        humidityData = humidityResponse.json()
 
         # Get station data
         station_list = tempData["metadata"]["stations"]
@@ -78,7 +87,7 @@ def rtwparse(tempResponse, humidityResponse):
             rtw_data.append(station_data)
 
         if len(station_list) >= 14:
-            # Loaded all, get most up to date data with all stations
+            # Loaded all, find most up to date data list with all stations
             # as latest data may not have all stations
             for item in reversed(tempData["items"]):
                 if len(item["readings"]) >= 14:
@@ -115,9 +124,12 @@ def rtwparse(tempResponse, humidityResponse):
 
     except (KeyError, TypeError, ValueError):
         return {
-            "id": "Invalid station ID",
-            "tempvalue": "Unavailable",
-            "humidity": "Unavailable",
+            "id": "No station ID available",
+            "name": "",
+            "tempvalue": "NA",
+            "humidity": "NA",
+            "h_index": "NA",
+            "index": "1",
         }
 
 
@@ -131,8 +143,8 @@ def uvi():
 
     except requests.RequestException:
         return {
-            "time": "No time", #latest UVI reading time
-            "value": "No value" #latest UVI reading
+            "time": "NA", #latest UVI reading time
+            "value": "NA" #latest UVI reading
         }
 
     # Parse data
@@ -146,8 +158,8 @@ def uvi():
 
     except (KeyError, TypeError, ValueError):
         return {
-            "time": "No time", #latest UVI reading time
-            "value": "No value" #latest UVI reading
+            "time": "NA", #latest UVI reading time
+            "value": "NA" #latest UVI reading
         }
 
 
@@ -155,12 +167,12 @@ def avgdata():
 
     avgdata = []
 
+    # No avg temp data
     if not avgtemp:
-        return "No avg temp"
+        avgdata.extend(("Hot/cold?", "Yes/no?"))
+        return avgdata
 
-    if not avghumid:
-        return "No avg humidity"
-
+    # Append appropriate average temp phrase to first list item
     if avgtemp >= 32.0:
         avgdata.append("Now damn hot,")
     elif avgtemp >= 30.0:
@@ -169,7 +181,13 @@ def avgdata():
         avgdata.append("Now not so hot,")
     else:
         avgdata.append("Now not hot,")
+    
+    # No avg humidity data
+    if not avghumid:
+        avgdata.append("not sure if humid or not?")
+        return avgdata
 
+    # Append appropriate average humidity phrase to second list item
     if avghumid >= 90.0:
         avgdata.append("damn humid!")
     elif avghumid >= 80.0:
@@ -183,6 +201,7 @@ def avgdata():
 
 
 def h_index(temp, humid):
+    # Formula constants
     C1 = -8.78469475556
     C2 = 1.61139411
     C3 = 2.33854883889
@@ -193,21 +212,26 @@ def h_index(temp, humid):
     C8 = 0.00072546
     C9 = -0.000003582
 
+    # Heat index formula
     hi = C1 + (C2 * temp) + (C3 * humid) + (C4 * temp * humid) + (C5 * (temp ** 2)) + (C6 * (humid ** 2)) + (C7 * (temp ** 2) * humid) + (C8 * temp * (humid ** 2)) + (C9 * (temp ** 2) * (humid ** 2))
+    
     return round(hi, 1)
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
+        # Load only most recent data
         url_t = f"https://api.data.gov.sg/v1/environment/air-temperature?date_time={urllib.parse.quote(now)}"
         url_h = f"https://api.data.gov.sg/v1/environment/relative-humidity?date_time={urllib.parse.quote(now)}"
 
 
     if request.method == "POST":
+        # Load latest data with all stations
         url_t = f"https://api.data.gov.sg/v1/environment/air-temperature?date={urllib.parse.quote(today)}"
         url_h = f"https://api.data.gov.sg/v1/environment/relative-humidity?date={urllib.parse.quote(today)}"
 
     rtw = rtwget(url_t, url_h)
     avg = avgdata()
+
     return render_template("index.html", rtw=rtw, avg=avg, uvi=uvi(), s_no=s_no, time=nicenow)
