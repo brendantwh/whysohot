@@ -1,134 +1,451 @@
 {% extends "layout.html" %}
 {% block main %}
 
-    <div class="container p-10 mx-auto max-w-screen-xl" x-data="dropdown()" x-init="check()">
+<div class="container p-10 mx-auto max-w-screen-xl" x-data="dropdown()" x-init="check()">
 
-        <div class="flex flex-col sm:flex-row items-center mb-8 sm:mb-10">
-            <div class="flex flex-col w-full text-center sm:text-left mb-6 sm:mb-0">
-                <h1 class="text-2xl md:text-4xl font-bold tracking-tight text-scheme-400 dark:text-dark-525 mb-2">
-                    {{ avg[0] }} {{ avg[1] -}}
-                </h1>
-                <h2 class="text-xs md:text-sm text-scheme-100 dark:text-dark-575 tracking-widest font-medium uppercase">
-                    Realtime Weather Information provided by Data.Gov.SG</h2>
-            </div>
+    <div class="flex flex-col sm:flex-row items-center mb-8 sm:mb-10">
+        <div class="flex flex-col w-full text-center sm:text-left mb-6 sm:mb-0">
+            <h1 class="text-2xl md:text-4xl font-bold tracking-tight text-scheme-400 dark:text-dark-525 mb-2">
+                {{ avg[0] }} {{ avg[1] -}}
+            </h1>
+            <h2 class="text-xs md:text-sm text-scheme-100 dark:text-dark-575 tracking-widest font-medium uppercase">
+                Realtime Weather Information provided by Data.Gov.SG</h2>
+        </div>
 
-            <div class="container px-6 py-4 mx-auto rounded-lg max-w-max
+        <div class="container px-6 py-4 mx-auto rounded-lg max-w-max
             {% if uvi.value >= 11 %}bg-uvi-l-500 dark:bg-uvi-d-500{% endif %}
             {% if (uvi.value >= 8 and uvi.value < 11) %}bg-uvi-l-400 dark:bg-uvi-d-400{% endif %}
             {% if (uvi.value >= 6 and uvi.value < 8) %}bg-uvi-l-300 dark:bg-uvi-d-300{% endif %}
             {% if (uvi.value >= 3 and uvi.value < 6) %}bg-uvi-l-200 dark:bg-uvi-d-200{% endif %}
             {% if (uvi.value < 3 or uvi.value == 'NA') %}bg-uvi-l-100 dark:bg-uvi-d-100{% endif %}">
-                <div class="flex flex-col items-center gap-1">
-                    <h3 class="text-2xl md:text-3xl font-semibold text-scheme4-450 dark:text-dark-210">{{ uvi.value }}</h3>
-                    <h4 class="text-xs md:text-sm text-scheme4-400 dark:text-dark-210 tracking-wide">UV Index</h4>
-                </div>
+            <div class="flex flex-col items-center gap-1">
+                <h3 class="text-2xl md:text-3xl font-semibold text-scheme4-450 dark:text-dark-210">{{ uvi.value }}</h3>
+                <h4 class="text-xs md:text-sm text-scheme4-400 dark:text-dark-210 tracking-wide">UV Index</h4>
             </div>
         </div>
+    </div>
 
-        <div class="flex flex-row justify-between items-start mb-5 sm:mb-8 text-scheme-400 dark:text-dark-205">
-            <form action="/" method="POST" id="loadall">
-                <button class="rounded-md p-2 w-20 text-sm font-semibold focus:outline-none bg-scheme-700 hover:bg-scheme-800 dark:bg-dark-175 dark:hover:bg-dark-200" type="submit">Load all</button>
-            </form>
+    <div class="flex flex-row justify-between items-start mb-5 sm:mb-8 text-scheme-400 dark:text-dark-205">
+        <form action="/" method="POST" id="loadall">
+            <button
+                class="rounded-md p-2 w-20 text-sm font-semibold focus:outline-none bg-scheme-700 hover:bg-scheme-800 dark:bg-dark-175 dark:hover:bg-dark-200"
+                type="submit">Load all</button>
+        </form>
 
-            <button class="rounded-md p-2 w-24 text-sm focus:outline-none bg-scheme-600 hover:bg-scheme-700 dark:bg-dark-175 dark:hover:bg-dark-200 ring-2 ring-offset-2 ring-scheme-550 dark:ring-dark-175 hover:ring-scheme-600 ring-offset-scheme-525 dark:ring-offset-dark-150" type="button"
-            @click="selected.length < (s_no.length / 2) ? allAdd() : allRem()"
+        <button
+            class="rounded-md p-2 w-24 text-sm focus:outline-none bg-scheme-600 hover:bg-scheme-700 dark:bg-dark-175 dark:hover:bg-dark-200 ring-2 ring-offset-2 ring-scheme-550 dark:ring-dark-175 hover:ring-scheme-600 ring-offset-scheme-525 dark:ring-offset-dark-150"
+            type="button" @click="selected.length < (s_no.length / 2) ? allAdd() : allRem()"
             x-text="selected.length < (s_no.length / 2) ? 'Expand all' : 'Collapse all'"></button>
-        </div>
+    </div>
 
-        <div class="flex flex-wrap gap-6 md:gap-10 justify-center items-start mb-14">
+    <div class="flex flex-wrap gap-6 md:gap-10 justify-center items-start mb-14">
 
         {% for station in rtw %}
-            <!-- Start reading from single station -->
-            <div class="weather-card">
-                <button type="button" class="group w-full text-left focus:outline-none"
+        <!-- Start reading from single station -->
+        <div class="weather-card">
+            <button type="button" class="group w-full text-left focus:outline-none"
                 @click="selected.includes({{ station.index }}) ? rem({{ station.index }}) : add({{ station.index }})">
-                    <div class="flex flex-row items-end justify-between">
-                        <div class="flex flex-row items-center justify-start">
-                            <span class="relative p-2">
-                                <svg class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-pin-100 dark:text-pin-200"
-                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="10" r="3" />
-                                    <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z" />
-                                </svg>
-                            </span>
-                            <div class="flex flex-col px-3.5 font-semibold text-scheme-400 dark:text-dark-205">
-                                <p class="text-base">
-                                    {{ station.id }}
-                                </p>
-                                <p class="text-xs">
-                                    {{ station.name }}
-                                </p>
-                            </div>
+                <div class="flex flex-row items-end justify-between">
+                    <div class="flex flex-row items-center justify-start">
+                        <span class="relative p-2">
+                            <svg class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-pin-100 dark:text-pin-200"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="10" r="3" />
+                                <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z" />
+                            </svg>
+                        </span>
+                        <div class="flex flex-col px-3.5 font-semibold text-scheme-400 dark:text-dark-205">
+                            <p class="text-base">
+                                {{ station.id }}
+                            </p>
+                            <p class="text-xs">
+                                {{ station.name }}
+                            </p>
                         </div>
-                        <svg class="text-scheme-200 dark:text-pin-200 group-hover:text-scheme-100 dark:group-hover:text-dark-205"
-                            xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                            stroke-linejoin="round"
-                            x-bind:style="selected.includes({{ station.index }}) ? 'transform: rotate(180deg)' : ''">
-                            <path d="M6 9l6 6 6-6" />
-                        </svg>
                     </div>
-                </button>
-                <div class="relative overflow-hidden transition-all max-h-0 duration-200 weathercontent" x-ref="{{ station.id }}"
-                    x-bind:style="selected.includes({{ station.index }}) ? 'max-height: ' + $refs.{{ station.id }}.scrollHeight + 'px' : ''">
-                    <div class="flex flex-row justify-between mt-4 relative" x-data="{feels:null}">
-                        <div class="flex flex-col cursor-pointer" @click="feels === null ? feels = true : feels = null" x-bind:style="feels === true ? 'visibility: hidden' : 'visibility: visible'">
-                            <p class="text-scheme-450 dark:text-dark-600 text-2xl sm:text-3xl text-left hover:text-scheme-300 dark:hover:text-dark-575 font-bold">
-                                {{ station.tempvalue }}<span class="text-lg sm:text-xl align-top">°C</span>
-                            </p>
-                            <p class="text-scheme-300 dark:text-dark-575 text-xs text-left tracking-tight">
-                                Temperature
-                            </p>
+                    <svg class="text-scheme-200 dark:text-pin-200 group-hover:text-scheme-100 dark:group-hover:text-dark-205"
+                        xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                        x-bind:style="selected.includes({{ station.index }}) ? 'transform: rotate(180deg)' : ''">
+                        <path d="M6 9l6 6 6-6" />
+                    </svg>
+                </div>
+            </button>
+            <div class="relative overflow-hidden transition-all max-h-0 duration-200 weathercontent"
+                x-ref="{{ station.id }}"
+                x-bind:style="selected.includes({{ station.index }}) ? 'max-height: ' + $refs.{{ station.id }}.scrollHeight + 'px' : ''">
+                <div class="flex flex-row justify-between mt-4 relative" x-data="{feels:null}">
+                    <div class="flex flex-col cursor-pointer" @click="feels === null ? feels = true : feels = null"
+                        x-bind:style="feels === true ? 'visibility: hidden' : 'visibility: visible'">
+                        <p
+                            class="text-scheme-450 dark:text-dark-600 text-2xl sm:text-3xl text-left hover:text-scheme-300 dark:hover:text-dark-575 font-bold">
+                            {{ station.tempvalue }}<span class="text-lg sm:text-xl align-top">°C</span>
+                        </p>
+                        <p class="text-scheme-300 dark:text-dark-575 text-xs text-left tracking-tight">
+                            Temperature
+                        </p>
+                    </div>
+                    <div class="flex flex-col cursor-pointer hover:text-dark-575 absolute"
+                        @click="feels === true ? feels = null : feels = true"
+                        x-bind:style="feels === true ? 'visibility: visible' : 'visibility: hidden'">
+                        <div
+                            class="text-scheme-450 dark:text-dark-525 text-2xl sm:text-3xl text-left hover:text-scheme-300 dark:hover:text-dark-575 font-bold">
+                            {{ station.h_index }}<span class="text-lg sm:text-xl align-top">°C</span>
                         </div>
-                        <div class="flex flex-col cursor-pointer hover:text-dark-575 absolute" @click="feels === true ? feels = null : feels = true" x-bind:style="feels === true ? 'visibility: visible' : 'visibility: hidden'">
-                            <div class="text-scheme-450 dark:text-dark-525 text-2xl sm:text-3xl text-left hover:text-scheme-300 dark:hover:text-dark-575 font-bold">
-                                {{ station.h_index }}<span class="text-lg sm:text-xl align-top">°C</span>
-                            </div>
-                            <p class="text-scheme-300 dark:text-dark-575 text-xs text-left tracking-tight">
-                                Feels like
-                            </p>
-                        </div>
-                        <div class="flex flex-col">
-                            <p class="text-scheme-450 text-2xl sm:text-3xl text-right dark:text-dark-600 font-bold">
-                                {{ station.humidity }}<span class="text-lg sm:text-xl align-bottom">%</span>
-                            </p>
-                            <p class="text-scheme-300 text-xs text-right tracking-tight dark:text-dark-575">
-                                Humidity
-                            </p>
-                        </div>
+                        <p class="text-scheme-300 dark:text-dark-575 text-xs text-left tracking-tight">
+                            Feels like
+                        </p>
+                    </div>
+                    <div class="flex flex-col">
+                        <p class="text-scheme-450 text-2xl sm:text-3xl text-right dark:text-dark-600 font-bold">
+                            {{ station.humidity }}<span class="text-lg sm:text-xl align-bottom">%</span>
+                        </p>
+                        <p class="text-scheme-300 text-xs text-right tracking-tight dark:text-dark-575">
+                            Humidity
+                        </p>
                     </div>
                 </div>
             </div>
-            <!-- End reading from single station -->
+        </div>
+        <!-- End reading from single station -->
         {% endfor %}
-
-        </div>
-
-        <div class="flex flex-col -mx-4 sm:mx-0 items-center text-center text-scheme-100 dark:text-dark-575">
-            <span class="text-xs font-medium uppercase tracking-tight">Data updated as of {{ time }}, may be limited due to API</span>
-            <span class="text-xs font-medium uppercase tracking-tight"><button form="loadall"
-                class="text-xs font-medium uppercase tracking-tight dark:hover:text-dark-600">Load all</button>
-                for more</span>
-        </div>
-
-        <div class="-mx-4 md:mx-0 lg:mx-14 mt-14 md:mt-20 lg:mt-32 pt-10 max-w-screen-lg" id="about">
-            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-scheme-400 dark:text-dark-225 mb-4">
-                About whysoHOT
-            </h1>
-            <span class="whitespace-pre-line leading-relaxed text-sm text-scheme-450 dark:text-dark-400">whysoHOT is a web application which gathers and displays air temperature and relative humidity across Singapore <a href="https://data.gov.sg/dataset/realtime-weather-readings" class="text-xs tracking-tighter hover:text-scheme-300 dark:hover:text-dark-225">(Realtime Weather Readings across Singapore)</a>, and UV index data <a href="https://data.gov.sg/dataset/ultraviolet-index-uvi" class="text-xs tracking-tighter hover:text-scheme-300 dark:hover:text-dark-225">(Ultra-violet Index (UVI))</a> from <a href="https://data.gov.sg/" class="hover:text-scheme-300 dark:hover:text-dark-225">Data.gov.sg</a> and displays it to the user for his/her usage.
-
-                The heat index (or "Feels like" temperature) of each weather station is also calculated for the user to have a better indication of temperature perceived by the human body and to plan strenous activities accordingly. It is accessible by clicking on the temperature reading of each station.
-
-
-                <span class="text-xs tracking-tighter text-scheme-450 dark:text-dark-400">Data made available under the terms of the <a href="https://data.gov.sg/open-data-licence" class="hover:text-scheme-300 dark:hover:text-dark-225">Singapore Open Data Licence version 1.0</a></span>
-            </span>
-        </div>
 
     </div>
 
-    <script>
-        var s_no = {{ s_no }}
-    </script>
+    <div class="flex flex-col -mx-5 sm:mx-0 items-center text-center text-scheme-100 dark:text-dark-575">
+        <span class="text-xs font-medium uppercase tracking-tight">Updated as of {{ time }}</span>
+        <span class="text-xs font-medium uppercase tracking-tight">Data may be limited due to API, <button form="loadall"
+                class="text-xs font-medium uppercase tracking-tight dark:hover:text-dark-600">Load all</button>
+            for more</span>
+    </div>
+
+    <div class="-mx-4 md:mx-auto pt-10 max-w-screen-lg" id="list" x-data="{listdrop:null, sorted:0}">
+        <div class="flex flex-row relative items-center">
+            <div class="flex flex-row items-center cursor-pointer group" @click="listdrop === null ? listdrop = 1 : listdrop = null">
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-scheme-400 dark:text-dark-225">
+                    Station List
+                </h1>
+                <svg class="ml-4 text-scheme-200 dark:text-pin-200 group-hover:text-scheme-100 dark:group-hover:text-dark-205"
+                    xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                    x-bind:style="listdrop === 1 ? 'transform: rotate(180deg)' : ''">
+                    <path d="M6 9l6 6 6-6" />
+                </svg>
+            </div>
+            <button
+                class="md:hidden absolute right-0 rounded-md p-2 text-sm text-scheme-400 dark:text-dark-205 font-semibold focus:outline-none bg-scheme-700 hover:bg-scheme-800 dark:bg-dark-175 dark:hover:bg-dark-200"
+                type="button" @click="sorted === 0 ? sorted = 1 : sorted = 0"
+                x-text="sorted === 0 ? 'Sort by: ID' : 'Sort by: Name'" x-bind:style="listdrop === 1 ? 'visibility: visible' : 'visibility: hidden'">
+            </button>
+        </div>
+
+        <div class="flex flex-col mt-4 overflow-hidden transition-all max-h-0 duration-200 md:hidden" 
+        x-bind:style="listdrop === 1 ? 'max-height: ' + $refs.list.scrollHeight + 'px' : ''">
+            <table class="md:w-1/4 table-auto border-collapse text-sm text-scheme-450 dark:text-dark-400" x-ref="list" x-bind:style="sorted === 0 ? 'visibility: visible; order: -9999' : 'visibility: hidden; order: 9999'">
+                <thead>
+                    <tr class="text-scheme-400 dark:text-dark-225">
+                        <th class="text-left">ID</th>
+                        <th class="text-right">Station name</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y-2 dark:divide-dark-225 dark:divide-opacity-10">
+                    <tr>
+                        <td>S109</td>
+                        <td class="text-right">Ang Mo Kio Avenue 5</td>
+                    </tr>
+                    <tr>
+                        <td>S50</td>
+                        <td class="text-right">Clementi Road</td>
+                    </tr>
+                    <tr>
+                        <td>S107</td>
+                        <td class="text-right">East Coast Parkway</td>
+                    </tr>
+                    <tr>
+                        <td>S43</td>
+                        <td class="text-right">Kim Chuan Road</td>
+                    </tr>
+                    <tr>
+                        <td>S108</td>
+                        <td class="text-right">Marina Gardens Drive</td>
+                    </tr>
+                    <tr>
+                        <td>S44</td>
+                        <td class="text-right">Nanyang Avenue</td>
+                    </tr>
+                    <tr>
+                        <td>S121</td>
+                        <td class="text-right">Old Choa Chu Kang Road</td>
+                    </tr>
+                    <tr>
+                        <td>S106</td>
+                        <td class="text-right">Pulau Ubin</td>
+                    </tr>
+                    <tr>
+                        <td>S111</td>
+                        <td class="text-right">Scotts Road</td>
+                    </tr>
+                    <tr>
+                        <td>S115</td>
+                        <td class="text-right">Tuas South Avenue 3</td>
+                    </tr>
+                    <tr>
+                        <td>S24</td>
+                        <td class="text-right">Upper Changi Road North</td>
+                    </tr>
+                    <tr>
+                        <td>S116</td>
+                        <td class="text-right">West Coast Highway</td>
+                    </tr>
+                    <tr>
+                        <td>S104</td>
+                        <td class="text-right">Woodlands Avenue 9</td>
+                    </tr>
+                    <tr>
+                        <td>S100</td>
+                        <td class="text-right">Woodlands Road</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="md:w-1/4 table-auto border-collapse text-sm text-scheme-450 dark:text-dark-400" x-bind:style="sorted === 1 ? 'visibility: visible; order: -9999' : 'visibility: hidden; order: 9999'">
+                <thead>
+                    <tr class="text-scheme-400 dark:text-dark-225">
+                        <th class="text-left">ID</th>
+                        <th class="text-right">Station name</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y-2 dark:divide-dark-225 dark:divide-opacity-10">
+                    <tr>
+                        <td>S24</td>
+                        <td class="text-right">Upper Changi Road North</td>
+                    </tr>
+                    <tr>
+                        <td>S43</td>
+                        <td class="text-right">Kim Chuan Road</td>
+                    </tr>
+                    <tr>
+                        <td>S44</td>
+                        <td class="text-right">Nanyang Avenue</td>
+                    </tr>
+                    <tr>
+                        <td>S50</td>
+                        <td class="text-right">Clementi Road</td>
+                    </tr>
+                    <tr>
+                        <td>S100</td>
+                        <td class="text-right">Woodlands Road</td>
+                    </tr>
+                    <tr>
+                        <td>S104</td>
+                        <td class="text-right">Woodlands Avenue 9</td>
+                    </tr>
+                    <tr>
+                        <td>S106</td>
+                        <td class="text-right">Pulau Ubin</td>
+                    </tr>
+                    <tr>
+                        <td>S107</td>
+                        <td class="text-right">East Coast Parkway</td>
+                    </tr>
+                    <tr>
+                        <td>S108</td>
+                        <td class="text-right">Marina Gardens Drive</td>
+                    </tr>
+                    <tr>
+                        <td>S109</td>
+                        <td class="text-right">Ang Mo Kio Avenue 5</td>
+                    </tr>
+                    <tr>
+                        <td>S111</td>
+                        <td class="text-right">Scotts Road</td>
+                    </tr>
+                    <tr>
+                        <td>S115</td>
+                        <td class="text-right">Tuas South Avenue 3</td>
+                    </tr>
+
+                    <tr>
+                        <td>S116</td>
+                        <td class="text-right">West Coast Highway</td>
+                    </tr>
+                    <tr>
+                        <td>S121</td>
+                        <td class="text-right">Old Choa Chu Kang Road</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="hidden md:flex md:flex-row mt-4 md:gap-20 md:justify-between md:items-center overflow-hidden transition-all max-h-0 duration-200" 
+        x-bind:style="listdrop === 1 ? 'max-height: ' + $refs.list2.scrollHeight + 'px' : ''">
+            <table class="md:w-1/4 table-auto border-collapse text-sm text-scheme-450 dark:text-dark-400" x-ref="list2" x-bind:style="sorted === 0 ? 'visibility: visible' : 'visibility: hidden'">
+                <thead>
+                    <tr class="text-scheme-400 dark:text-dark-225">
+                        <th class="text-left">ID</th>
+                        <th class="text-right">Station name</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y-2 dark:divide-dark-225 dark:divide-opacity-10">
+                    <tr>
+                        <td>S109</td>
+                        <td class="text-right">Ang Mo Kio Avenue 5</td>
+                    </tr>
+                    <tr>
+                        <td>S50</td>
+                        <td class="text-right">Clementi Road</td>
+                    </tr>
+                    <tr>
+                        <td>S107</td>
+                        <td class="text-right">East Coast Parkway</td>
+                    </tr>
+                    <tr>
+                        <td>S43</td>
+                        <td class="text-right">Kim Chuan Road</td>
+                    </tr>
+                    <tr>
+                        <td>S108</td>
+                        <td class="text-right">Marina Gardens Drive</td>
+                    </tr>
+                    <tr>
+                        <td>S44</td>
+                        <td class="text-right">Nanyang Avenue</td>
+                    </tr>
+                    <tr>
+                        <td>S121</td>
+                        <td class="text-right">Old Choa Chu Kang Road</td>
+                    </tr>
+                    <tr>
+                        <td>S106</td>
+                        <td class="text-right">Pulau Ubin</td>
+                    </tr>
+                    <tr>
+                        <td>S111</td>
+                        <td class="text-right">Scotts Road</td>
+                    </tr>
+                    <tr>
+                        <td>S115</td>
+                        <td class="text-right">Tuas South Avenue 3</td>
+                    </tr>
+                    <tr>
+                        <td>S24</td>
+                        <td class="text-right">Upper Changi Road North</td>
+                    </tr>
+                    <tr>
+                        <td>S116</td>
+                        <td class="text-right">West Coast Highway</td>
+                    </tr>
+                    <tr>
+                        <td>S104</td>
+                        <td class="text-right">Woodlands Avenue 9</td>
+                    </tr>
+                    <tr>
+                        <td>S100</td>
+                        <td class="text-right">Woodlands Road</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button
+                class="rounded-md p-2 w-1/6 text-sm text-scheme-400 dark:text-dark-205 font-semibold focus:outline-none bg-scheme-700 hover:bg-scheme-800 dark:bg-dark-175 dark:hover:bg-dark-200"
+                type="button" @click="sorted === 0 ? sorted = 1 : sorted = 0"
+                x-text="sorted === 0 ? 'Sort by: ID' : 'Sort by: Name'">
+            </button>
+
+            <table class="md:w-1/4 table-auto border-collapse text-sm text-scheme-450 dark:text-dark-400" x-bind:style="sorted === 1 ? 'visibility: visible' : 'visibility: hidden'">
+                <thead>
+                    <tr class="text-scheme-400 dark:text-dark-225">
+                        <th class="text-left">ID</th>
+                        <th class="text-right">Station name</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y-2 dark:divide-dark-225 dark:divide-opacity-10">
+                    <tr>
+                        <td>S24</td>
+                        <td class="text-right">Upper Changi Road North</td>
+                    </tr>
+                    <tr>
+                        <td>S43</td>
+                        <td class="text-right">Kim Chuan Road</td>
+                    </tr>
+                    <tr>
+                        <td>S44</td>
+                        <td class="text-right">Nanyang Avenue</td>
+                    </tr>
+                    <tr>
+                        <td>S50</td>
+                        <td class="text-right">Clementi Road</td>
+                    </tr>
+                    <tr>
+                        <td>S100</td>
+                        <td class="text-right">Woodlands Road</td>
+                    </tr>
+                    <tr>
+                        <td>S104</td>
+                        <td class="text-right">Woodlands Avenue 9</td>
+                    </tr>
+                    <tr>
+                        <td>S106</td>
+                        <td class="text-right">Pulau Ubin</td>
+                    </tr>
+                    <tr>
+                        <td>S107</td>
+                        <td class="text-right">East Coast Parkway</td>
+                    </tr>
+                    <tr>
+                        <td>S108</td>
+                        <td class="text-right">Marina Gardens Drive</td>
+                    </tr>
+                    <tr>
+                        <td>S109</td>
+                        <td class="text-right">Ang Mo Kio Avenue 5</td>
+                    </tr>
+                    <tr>
+                        <td>S111</td>
+                        <td class="text-right">Scotts Road</td>
+                    </tr>
+                    <tr>
+                        <td>S115</td>
+                        <td class="text-right">Tuas South Avenue 3</td>
+                    </tr>
+
+                    <tr>
+                        <td>S116</td>
+                        <td class="text-right">West Coast Highway</td>
+                    </tr>
+                    <tr>
+                        <td>S121</td>
+                        <td class="text-right">Old Choa Chu Kang Road</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="-mx-4 md:mx-auto pt-10 max-w-screen-lg" id="about">
+        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-scheme-400 dark:text-dark-225 mb-4">
+            About whysoHOT
+        </h1>
+        <span class="whitespace-pre-line md:leading-relaxed text-sm text-scheme-450 dark:text-dark-400">whysoHOT is a web application which gathers and displays air temperature and relative humidity across Singapore <a
+                href="https://data.gov.sg/dataset/realtime-weather-readings"
+                class="text-xs tracking-tighter hover:text-scheme-300 dark:hover:text-dark-225">(Realtime Weather Readings across Singapore)</a>, and UV index data <a
+                href="https://data.gov.sg/dataset/ultraviolet-index-uvi"
+                class="text-xs tracking-tighter hover:text-scheme-300 dark:hover:text-dark-225">(Ultra-violet Index (UVI))</a> from <a href="https://data.gov.sg/"
+                class="hover:text-scheme-300 dark:hover:text-dark-225">Data.gov.sg</a> and displays it to the user for his/her usage.
+
+            The heat index (or "Feels like" temperature) of each weather station is also calculated for the user to have a better indication of temperature perceived by the human body and to plan strenous activities accordingly. It is accessible by clicking on the temperature reading of each station.
+
+
+            <span class="text-xs tracking-tighter text-scheme-450 dark:text-dark-400">Data made available under the terms of the <a href="https://data.gov.sg/open-data-licence"
+                    class="hover:text-scheme-300 dark:hover:text-dark-225">Singapore Open Data Licence version 1.0</a></span>
+        </span>
+    </div>
+
+</div>
+
+<script>
+    var s_no = {{ s_no }}
+</script>
 {% endblock %}

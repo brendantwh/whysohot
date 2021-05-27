@@ -2,7 +2,7 @@ import requests
 import urllib.parse
 
 from dateutil import tz
-from datetime import datetime, timezone
+from datetime import datetime
 from flask import Flask, render_template, request
 
 # Configure application
@@ -20,7 +20,7 @@ def after_request(response):
 sgtz = tz.gettz('Asia/Singapore')
 now = datetime.now(tz=sgtz).isoformat(timespec='seconds')
 today = datetime.now(tz=sgtz).strftime('%Y-%m-%d')
-nicenow = datetime.now(tz=sgtz).strftime('%-I:%M%p, %-d %b %Y')
+nicenow = datetime.now(tz=sgtz).strftime('%-I:%M%p, %-d %b %Y') # Platform specific, Windows uses hash (#)
 
 avgtemp = 0
 avghumid = 0
